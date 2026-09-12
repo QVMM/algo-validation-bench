@@ -117,7 +117,11 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def log_message(self, fmt: str, *args) -> None:
-        print(f"[验证台] {args[0]}")
+        # Keep ASCII-only — Render free runners often use a C locale
+        try:
+            print(f"[bench] {args[0]}", flush=True)
+        except Exception:
+            pass
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -242,7 +246,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
-    print("智能检测算法验证台 · YOLO剪枝+INT8", flush=True)
+    print("algo-validation-bench ready", flush=True)
     print(f"  listening on 0.0.0.0:{PORT}", flush=True)
     print("  API  POST/GET /api/infer  GET /api/health", flush=True)
     try:
