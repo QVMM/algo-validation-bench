@@ -5,8 +5,10 @@ services:
     plan: free
     region: singapore
     buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    startCommand: python -u app.py
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
+      - key: PYTHONUNBUFFERED
+        value: "1"

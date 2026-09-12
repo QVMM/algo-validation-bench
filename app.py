@@ -110,6 +110,9 @@ def sample_from_path(path: str) -> str:
 
 
 class Handler(SimpleHTTPRequestHandler):
+    # Render/proxy health checks need HTTP/1.1 (stdlib default is 1.0)
+    protocol_version = "HTTP/1.1"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
@@ -239,11 +242,9 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
-    print("智能检测算法验证台 · YOLO剪枝+INT8")
-    print(f"  打开 http://127.0.0.1:{PORT}")
-    print("  API  POST/GET /api/infer")
-    print("  static  charts/  samples/")
-    print("  Ctrl+C 退出")
+    print("智能检测算法验证台 · YOLO剪枝+INT8", flush=True)
+    print(f"  listening on 0.0.0.0:{PORT}", flush=True)
+    print("  API  POST/GET /api/infer  GET /api/health", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
