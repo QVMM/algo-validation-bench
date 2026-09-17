@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""智能检测算法验证台 — YOLO剪枝+INT8 · 农业病虫害监测（演示 API，无真实权重推理）"""
+"""智能检测算法验证台 — 原始模型剪枝+INT8 · 农业病虫害监测（演示 API，无真实权重推理）"""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", "8765"))
 
 # Excel-aligned bold metrics (草莓病害)
-YOLO_BASE = {
+ORIGINAL_BASE = {
     "conf": 0.95,
     "params": 25.8,
     "sizeMB": 6.6,
@@ -24,55 +24,72 @@ YOLO_BASE = {
     "recall": 90.7,
     "speedGain": 0.0,
 }
+YOLO_BASE = ORIGINAL_BASE  # backward-compat alias
+
+# Shared geometry: same count/position/label; only conf differs
+SAMPLE_GEOM = {
+    "normal": [
+        {"id": "n1", "label": "Leaf Spot", "x": 42, "y": 28, "w": 40, "h": 42, "yoloConf": 0.95, "prunedConf": 0.85},
+        {"id": "n2", "label": "Gray Mold", "x": 18, "y": 18, "w": 24, "h": 28, "yoloConf": 0.91, "prunedConf": 0.82},
+    ],
+    "small": [
+        {"id": "s1", "label": "Anthracnose Fruit Rot", "x": 44, "y": 40, "w": 16, "h": 18, "yoloConf": 0.88, "prunedConf": 0.80},
+        {"id": "s2", "label": "Blossom Blight", "x": 58, "y": 48, "w": 12, "h": 12, "yoloConf": 0.84, "prunedConf": 0.76},
+    ],
+    "occlusion": [
+        {"id": "o1", "label": "Powdery Mildew Leaf", "x": 36, "y": 28, "w": 28, "h": 36, "yoloConf": 0.90, "prunedConf": 0.82},
+        {"id": "o2", "label": "Powdery Mildew Fruit", "x": 12, "y": 40, "w": 22, "h": 24, "yoloConf": 0.86, "prunedConf": 0.79},
+    ],
+    "lowlight": [
+        {"id": "l1", "label": "Powdery Mildew Fruit", "x": 30, "y": 28, "w": 36, "h": 34, "yoloConf": 0.87, "prunedConf": 0.81},
+        {"id": "l2", "label": "Leaf Spot", "x": 58, "y": 52, "w": 20, "h": 18, "yoloConf": 0.83, "prunedConf": 0.76},
+    ],
+    "complex": [
+        {"id": "c1", "label": "Anthracnose Fruit Rot", "x": 36, "y": 48, "w": 28, "h": 26, "yoloConf": 0.92, "prunedConf": 0.84},
+        {"id": "c2", "label": "Blossom Blight", "x": 48, "y": 28, "w": 26, "h": 24, "yoloConf": 0.89, "prunedConf": 0.80},
+    ],
+    "req_a": [
+        {"id": "ra1", "label": "Anthracnose Fruit Rot", "x": 28, "y": 24, "w": 44, "h": 48, "yoloConf": 0.95, "prunedConf": 0.85},
+        {"id": "ra2", "label": "Fruit Lesion", "x": 52, "y": 58, "w": 22, "h": 20, "yoloConf": 0.90, "prunedConf": 0.80},
+    ],
+    "req_b": [
+        {"id": "rb1", "label": "Fruit Lesion", "x": 30, "y": 26, "w": 42, "h": 46, "yoloConf": 0.94, "prunedConf": 0.84},
+        {"id": "rb2", "label": "Anthracnose Fruit Rot", "x": 18, "y": 54, "w": 20, "h": 18, "yoloConf": 0.88, "prunedConf": 0.79},
+    ],
+}
+
+
+def _boxes_from_geom(geom: list, kind: str) -> list:
+    key = "yoloConf" if kind == "yolo" else "prunedConf"
+    return [
+        {
+            "id": b["id"],
+            "label": b["label"],
+            "x": b["x"],
+            "y": b["y"],
+            "w": b["w"],
+            "h": b["h"],
+            "baseConf": b[key],
+        }
+        for b in geom
+    ]
+
 
 SAMPLE_BOXES = {
-    "normal": {
-        "yolo": [
-            {"id": "n1", "label": "叶斑病", "x": 38, "y": 22, "w": 34, "h": 48, "baseConf": 0.95},
-            {"id": "n2", "label": "灰霉病", "x": 14, "y": 16, "w": 20, "h": 26, "baseConf": 0.91},
-        ],
-        "pruned": [
-            {"id": "n1", "label": "叶斑病", "x": 36, "y": 20, "w": 36, "h": 50, "baseConf": 0.85},
-            {"id": "n2", "label": "灰霉病", "x": 12, "y": 14, "w": 22, "h": 28, "baseConf": 0.82},
-            {"id": "n3", "label": "角斑病", "x": 52, "y": 58, "w": 16, "h": 14, "baseConf": 0.78},
-        ],
-    },
-    "small": {
-        "yolo": [{"id": "s1", "label": "炭疽病", "x": 32, "y": 38, "w": 14, "h": 16, "baseConf": 0.88}],
-        "pruned": [
-            {"id": "s1", "label": "炭疽病", "x": 30, "y": 36, "w": 16, "h": 18, "baseConf": 0.80},
-            {"id": "s2", "label": "花枯病", "x": 48, "y": 42, "w": 10, "h": 12, "baseConf": 0.76},
-            {"id": "s3", "label": "叶斑病", "x": 22, "y": 52, "w": 8, "h": 9, "baseConf": 0.74},
-        ],
-    },
-    "occlusion": {
-        "yolo": [{"id": "o1", "label": "白粉病叶片", "x": 35, "y": 30, "w": 22, "h": 32, "baseConf": 0.90}],
-        "pruned": [
-            {"id": "o1", "label": "白粉病叶片", "x": 10, "y": 34, "w": 24, "h": 26, "baseConf": 0.82},
-            {"id": "o2", "label": "白粉病果实", "x": 36, "y": 28, "w": 22, "h": 34, "baseConf": 0.79},
-            {"id": "o3", "label": "灰霉病", "x": 60, "y": 38, "w": 24, "h": 24, "baseConf": 0.77},
-        ],
-    },
-    "lowlight": {
-        "yolo": [{"id": "l1", "label": "白粉病果实", "x": 32, "y": 36, "w": 28, "h": 26, "baseConf": 0.87}],
-        "pruned": [
-            {"id": "l1", "label": "白粉病果实", "x": 28, "y": 32, "w": 34, "h": 30, "baseConf": 0.81},
-            {"id": "l2", "label": "叶斑病", "x": 58, "y": 48, "w": 18, "h": 20, "baseConf": 0.76},
-            {"id": "l3", "label": "角斑病", "x": 40, "y": 62, "w": 16, "h": 14, "baseConf": 0.74},
-        ],
-    },
-    "complex": {
-        "yolo": [
-            {"id": "c1", "label": "炭疽病", "x": 40, "y": 68, "w": 22, "h": 20, "baseConf": 0.92},
-            {"id": "c2", "label": "花枯病", "x": 48, "y": 52, "w": 24, "h": 22, "baseConf": 0.89},
-        ],
-        "pruned": [
-            {"id": "c1", "label": "炭疽病", "x": 38, "y": 66, "w": 24, "h": 22, "baseConf": 0.84},
-            {"id": "c2", "label": "花枯病", "x": 46, "y": 48, "w": 26, "h": 24, "baseConf": 0.80},
-            {"id": "c3", "label": "叶斑病", "x": 22, "y": 38, "w": 20, "h": 26, "baseConf": 0.77},
-        ],
-    },
+    sid: {"yolo": _boxes_from_geom(g, "yolo"), "pruned": _boxes_from_geom(g, "pruned")}
+    for sid, g in SAMPLE_GEOM.items()
 }
+
+SYNTH_LABELS = ["Anthracnose Fruit Rot", "Fruit Lesion", "Leaf Spot"]
+
+
+def synthesize_boxes(kind: str) -> list:
+    """Same geometry for both models; only conf differs."""
+    geom = [
+        {"id": "u1", "label": "Anthracnose Fruit Rot", "x": 30, "y": 26, "w": 40, "h": 44, "yoloConf": 0.95, "prunedConf": 0.85},
+        {"id": "u2", "label": "Fruit Lesion", "x": 52, "y": 54, "w": 20, "h": 18, "yoloConf": 0.91, "prunedConf": 0.81},
+    ]
+    return _boxes_from_geom(geom, kind)
 
 
 def clamp(n: float, lo: float, hi: float) -> float:
@@ -84,18 +101,18 @@ def lerp(a: float, b: float, t: float) -> float:
 
 
 def pruned_metrics(prune_ratio: float) -> dict:
-    """Mock metrics aligned to Excel: conf 0.85, size 3.6MB, speed +15% at 0.2."""
+    """Mock metrics: conf 0.85, size 3.3MB (−50%), speed +40%, precision ~87.8 at 0.2."""
     r = clamp(prune_ratio, 0.05, 0.5)
     d = r - 0.2
     return {
         "conf": round(clamp(0.85 - d * 0.4, 0.72, 0.93), 2),
-        "params": round(clamp(14.2 - d * 20, 9.0, 20.0), 2),
-        "sizeMB": round(clamp(3.6 - d * 6, 2.4, 5.5), 1),
-        "inferMs": round(clamp(41.7 + d * 20, 32.0, 48.0), 1),
-        "fps": round(clamp(24.0 - d * 12, 18.0, 30.0), 1),
-        "precision": round(clamp(92.0 - d * 12, 85.0, 96.0), 1),
-        "recall": round(clamp(88.6 - d * 10, 82.0, 93.0), 1),
-        "speedGain": round(clamp(15 - d * 40, 5, 28), 0),
+        "params": round(clamp(12.9 - d * 18, 8.0, 18.0), 2),
+        "sizeMB": round(clamp(3.3 - d * 5, 2.2, 5.0), 1),
+        "inferMs": round(clamp(34.3 + d * 18, 26.0, 45.0), 1),
+        "fps": round(clamp(29.2 - d * 12, 20.0, 36.0), 1),
+        "precision": round(clamp(87.8 - d * 12, 80.0, 94.0), 1),
+        "recall": round(clamp(86.0 - d * 10, 78.0, 92.0), 1),
+        "speedGain": round(clamp(40 - d * 40, 20, 55), 0),
     }
 
 
@@ -105,7 +122,7 @@ def conf_display(base: float, threshold: float) -> float:
 
 
 def sample_from_path(path: str) -> str:
-    m = re.search(r"(normal|small|occlusion|lowlight|complex)", path or "")
+    m = re.search(r"(normal|small|occlusion|lowlight|complex|req_a|req_b)", path or "")
     return m.group(1) if m else "normal"
 
 
@@ -123,22 +140,47 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception:
             pass
 
+    def _send_bytes(self, data: bytes, content_type: str, code: int = 200) -> None:
+        self.send_response(code)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
-        if parsed.path == "/api/health":
-            data = b'{"ok":true}'
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("Content-Length", str(len(data)))
-            self.end_headers()
-            self.wfile.write(data)
+        path = parsed.path
+        if path == "/api/health":
+            self._send_bytes(b'{"ok":true}', "application/json; charset=utf-8")
             return
-        if parsed.path == "/api/infer":
+        if path == "/api/infer":
             self._handle_infer(parsed)
             return
-        if parsed.path in ("/", "/index.html"):
-            self.path = "/index.html"
-        return super().do_GET()
+        # Explicit file serve — avoids SimpleHTTP unicode-directory 404s
+        if path in ("/", "/index.html"):
+            fp = ROOT / "index.html"
+            if not fp.is_file():
+                self.send_error(404, "index.html missing")
+                return
+            self._send_bytes(fp.read_bytes(), "text/html; charset=utf-8")
+            return
+        # Other static assets under ROOT
+        rel = path.lstrip("/")
+        if not rel or ".." in rel.split("/"):
+            self.send_error(404)
+            return
+        fp = (ROOT / rel).resolve()
+        try:
+            fp.relative_to(ROOT)
+        except ValueError:
+            self.send_error(403)
+            return
+        if not fp.is_file():
+            self.send_error(404)
+            return
+        ctype = self.guess_type(str(fp))
+        self._send_bytes(fp.read_bytes(), ctype)
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
@@ -166,13 +208,18 @@ class Handler(SimpleHTTPRequestHandler):
 
     def _respond_infer(self, body: dict) -> None:
         sample = body.get("sample") or sample_from_path(str(body.get("path", "")))
-        if sample not in SAMPLE_BOXES:
-            sample = "normal"
+        known = sample in SAMPLE_BOXES
+        if not known:
+            # uploaded / unknown image → synthesize boxes; keep sample id for client
+            sample = sample or "upload"
         prune_ratio = clamp(float(body.get("prune_ratio", body.get("compress", 0.2))), 0.05, 0.5)
         threshold = clamp(float(body.get("threshold", 0.52)), 0.3, 0.7)
         mode = body.get("mode", "single")
         script = body.get("script", "prune")
         metrics = pruned_metrics(prune_ratio)
+        original_name = body.get("original_model") or "bch.pt"
+        pruned_name = body.get("pruned_model") or "bch_int8.onnx"
+        image_name = body.get("image_name") or (f"samples/{sample}.jpg" if known else "upload.jpg")
 
         def annotate(boxes):
             out = []
@@ -182,57 +229,80 @@ class Handler(SimpleHTTPRequestHandler):
                 out.append(item)
             return out
 
-        boxes = SAMPLE_BOXES[sample]
+        if known:
+            boxes = SAMPLE_BOXES[sample]
+            yolo_boxes = boxes["yolo"]
+            pruned_boxes = boxes["pruned"]
+        else:
+            yolo_boxes = synthesize_boxes("yolo")
+            pruned_boxes = synthesize_boxes("pruned")
+
         if script == "validate":
             logs = [
                 "$ python validate_testset.py",
-                "加载 data.yaml / weights/bch.pt…",
-                "模型加载成功: ./weights/bch.pt",
+                f"加载 data.yaml / weights/{original_name}…",
+                f"模型加载成功: ./weights/{original_name}",
                 "开始测试集验证 (split=test)…",
                 f"done. conf={metrics['conf']:.2f}  size={metrics['sizeMB']}MB  speed=+{int(metrics['speedGain'])}%",
             ]
         else:
             logs = [
                 "$ python prune_quantize.py",
-                "Loading YOLO('./weights/bch.pt')…",
+                f"Loading 原始模型('./weights/{original_name}')…",
                 f"L1 unstructured prune Conv2d (prune_ratio={prune_ratio:.2f})…",
                 "Export ONNX (opset=17, simplify=True)…",
-                "quantize_dynamic → ./weights/bch_int8.onnx",
+                f"quantize_dynamic → ./weights/{pruned_name}",
                 "剪枝+INT8量化完成",
-                f"mock infer samples/{sample}.jpg  conf={metrics['conf']:.2f}  size={metrics['sizeMB']}MB  speed=+{int(metrics['speedGain'])}%",
+                f"mock infer {image_name}  conf={metrics['conf']:.2f}  size={metrics['sizeMB']}MB  speed=+{int(metrics['speedGain'])}%",
             ]
+
+        # Dual-model validate timing hints for the client wizard
+        timing = {
+            "original_ms": 2000,
+            "pruned_ms": 1200,
+        }
 
         payload = {
             "ok": True,
-            "sample": sample,
+            "sample": sample if known else "upload",
             "prune_ratio": prune_ratio,
             "threshold": threshold,
             "mode": mode,
             "script": script,
             "logs": logs,
+            "timing": timing,
             "charts": {
                 "baseline": "charts/curve_baseline.png",
                 "pruned": "charts/curve_pruned.png",
             },
             "excel": {
+                "conf_original": 0.95,
                 "conf_yolo": 0.95,
                 "conf_pruned": 0.85,
-                "speed_gain_pct": 15,
+                "speed_gain_pct": 40,
+                "size_original_mb": 6.6,
                 "size_yolo_mb": 6.6,
-                "size_pruned_mb": 3.6,
-                "classes": ["角斑病", "炭疽病", "花枯病", "灰霉病", "叶斑病", "白粉病果实", "白粉病叶片"],
+                "size_pruned_mb": 3.3,
+                "size_drop_pct": 50,
+                "precision_original": 97.6,
+                "precision_pruned": 87.8,
+                "classes": ["Angular Leafspot", "Anthracnose Fruit Rot", "Blossom Blight", "Gray Mold", "Leaf Spot", "Powdery Mildew Fruit", "Powdery Mildew Leaf", "Anthracnose Fruit Rot", "Fruit Lesion"],
             },
             "pruned": {
                 "metrics": metrics,
-                "boxes": annotate(boxes["pruned"]),
+                "boxes": annotate(pruned_boxes),
             },
             "qrg": {
                 "metrics": metrics,
-                "boxes": annotate(boxes["pruned"]),
+                "boxes": annotate(pruned_boxes),
             },
             "yolo": {
-                "metrics": YOLO_BASE,
-                "boxes": annotate(boxes["yolo"]),
+                "metrics": ORIGINAL_BASE,
+                "boxes": annotate(yolo_boxes),
+            },
+            "original": {
+                "metrics": ORIGINAL_BASE,
+                "boxes": annotate(yolo_boxes),
             },
         }
         data = json.dumps(payload, ensure_ascii=False).encode("utf-8")

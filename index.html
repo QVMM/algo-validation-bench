@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
+
   :root {
     --bg: #0a0a0a;
     --panel: #111111;
@@ -248,21 +249,38 @@
     flex-shrink: 0;
   }
   .scene-overlay { position: absolute; inset: 0; pointer-events: none; }
+  /* Roboflow / Ultralytics YOLO playground style */
   .box {
-    position: absolute; border-style: solid; border-width: 3px;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.55);
+    position: absolute;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 0;
+    box-shadow: none;
+    opacity: 0;
   }
-  .box.yolo { border-color: #f59e0b; }
-  .box.pruned { border-color: #22d3ee; }
+  .box.show { opacity: 1; transition: opacity 0.22s ease; }
+  .col-status {
+    font-size: 11px; color: var(--muted); padding: 0 10px 6px;
+    min-height: 18px;
+  }
+  .col-status.busy { color: #fbbf24; }
+  .col-status.done { color: #4ade80; }
   .box span {
-    position: absolute; top: -22px; left: -1px; white-space: nowrap;
-    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 3px;
-    color: #fff; letter-spacing: 0.01em;
-    background: #1c1917; border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.55);
+    position: absolute;
+    top: 0; left: 0;
+    transform: translateY(-100%);
+    white-space: nowrap;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+    padding: 1px 5px;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    letter-spacing: 0;
+    color: #111;
   }
-  .box.yolo span { background: #92400e; border-color: #f59e0b; }
-  .box.pruned span { background: #0e7490; border-color: #22d3ee; }
   .col-metrics {
     flex-shrink: 0; padding: 8px 10px 10px;
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
@@ -327,6 +345,67 @@
     display: flex; flex-direction: column; min-height: 0;
     overflow-y: auto; overscroll-behavior: contain;
   }
+
+
+  .wizard {
+    background: var(--panel); border-radius: 8px; padding: 12px; margin-top: 10px; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .wiz-step { margin-bottom: 14px; }
+  .wiz-step:last-child { margin-bottom: 0; }
+  .wiz-label {
+    font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .wiz-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 999px; font-size: 10px;
+    background: var(--accent-dim); color: #a7f3d0; font-weight: 700;
+  }
+  .model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .import-card {
+    border: 1px dashed rgba(255,255,255,0.14); border-radius: 8px;
+    padding: 10px; background: rgba(255,255,255,0.02);
+    display: flex; flex-direction: column; gap: 6px; min-height: 88px;
+  }
+  .import-card.ready { border-style: solid; border-color: rgba(52,211,153,0.45); background: rgba(52,211,153,0.06); }
+  .import-card .ic-title { font-size: 11px; font-weight: 600; color: #e7e5e4; }
+  .import-card .ic-file {
+    font-size: 10px; color: #a8a29e; font-family: 'IBM Plex Mono', monospace;
+    word-break: break-all; min-height: 28px;
+  }
+  .import-card .ic-file.empty { color: #57534e; }
+  .status-chip {
+    align-self: flex-start; border-radius: 999px; padding: 2px 8px; font-size: 10px; font-weight: 600;
+    background: rgba(255,255,255,0.05); color: #78716c;
+  }
+  .status-chip.on { background: var(--accent-dim); color: #6ee7b7; }
+  .file-btn {
+    border: 0; border-radius: 6px; padding: 6px 8px; font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,0.08); color: #e7e5e4; cursor: pointer; text-align: center;
+  }
+  .file-btn:hover { background: rgba(255,255,255,0.14); }
+  .file-btn input { display: none; }
+  .img-import-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 8px; }
+  .img-preview-mini {
+    width: 56px; height: 56px; border-radius: 6px; object-fit: cover;
+    background: #1c1917; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .img-meta { flex: 1; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+  .progress-bar {
+    height: 4px; border-radius: 999px; background: #2a2a2a; overflow: hidden; margin-top: 8px;
+  }
+  .progress-bar > i {
+    display: block; height: 100%; width: 0%; background: var(--accent);
+    transition: width .25s ease;
+  }
+  .timing-row {
+    display: flex; gap: 8px; margin-top: 6px; font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace; color: #a8a29e;
+  }
+  .timing-row .t-orig { color: #fbbf24; }
+  .timing-row .t-pruned { color: #67e8f9; }
+
 </style>
 </head>
 <body>
@@ -334,16 +413,16 @@
     <header>
       <div>
         <h1>智能检测算法验证台</h1>
-        <p class="sub">草莓病害监测 · YOLO原本 vs 剪枝+INT8 质减量增</p>
+        <p class="sub">草莓病害监测 · 原始模型 vs 剪枝+INT8 质减量增</p>
       </div>
       <div class="chips" id="pipeline">
-        <span class="chip" data-step="0">Load YOLO</span>
+        <span class="chip" data-step="0">导入模型</span>
         <span class="arrow">→</span>
-        <span class="chip" data-step="1">Prune</span>
+        <span class="chip" data-step="1">导入图像</span>
         <span class="arrow">→</span>
-        <span class="chip" data-step="2">INT8</span>
+        <span class="chip" data-step="2">开始验证</span>
         <span class="arrow">→</span>
-        <span class="chip" data-step="3">done</span>
+        <span class="chip" data-step="3">对比完成</span>
       </div>
     </header>
 
@@ -371,20 +450,64 @@
           </div>
         </div>
 
-        <div class="samples" id="samples"></div>
+        <div class="wizard" id="wizard">
+          <div class="wiz-step">
+            <div class="wiz-label"><span class="wiz-num">1</span>导入双模型（原始模型 + 剪枝量化模型）</div>
+            <div class="model-grid">
+              <div class="import-card" id="cardOrig">
+                <div class="ic-title">原始模型</div>
+                <div class="ic-file empty" id="origFileName">未选择文件</div>
+                <span class="status-chip" id="origChip">待导入</span>
+                <label class="file-btn">选择文件
+                  <input type="file" id="origModelInput" accept=".pt,.onnx,.engine,*/*" />
+                </label>
+              </div>
+              <div class="import-card" id="cardPruned">
+                <div class="ic-title">剪枝量化模型</div>
+                <div class="ic-file empty" id="prunedFileName">未选择文件</div>
+                <span class="status-chip" id="prunedChip">待导入</span>
+                <label class="file-btn">选择文件
+                  <input type="file" id="prunedModelInput" accept=".pt,.onnx,.engine,*/*" />
+                </label>
+              </div>
+            </div>
+          </div>
 
-        <div class="actions">
-          <button class="btn btn-primary" id="btnRun" type="button">运行 · 剪枝+量化</button>
-          <button class="btn btn-ghost" id="btnCompare" type="button">对比 YOLO</button>
+          <div class="wiz-step">
+            <div class="wiz-label"><span class="wiz-num">2</span>导入检测图像（上传或选择样例）</div>
+            <div class="img-import-row">
+              <img class="img-preview-mini" id="imgPreview" alt="" hidden />
+              <div class="img-meta">
+                <div class="ic-file empty" id="imgFileName">未选择图像</div>
+                <span class="status-chip" id="imgChip">待导入</span>
+                <label class="file-btn" style="align-self:flex-start">上传图像
+                  <input type="file" id="imageInput" accept="image/*" />
+                </label>
+              </div>
+            </div>
+            <div class="samples" id="samples"></div>
+          </div>
+
+          <div class="wiz-step">
+            <div class="wiz-label"><span class="wiz-num">3</span>开始验证对比</div>
+            <div class="actions" style="margin-top:0">
+              <button class="btn btn-primary" id="btnValidate" type="button" disabled>开始验证</button>
+            </div>
+            <div class="progress-bar" id="progressBar" hidden><i id="progressFill"></i></div>
+            <div class="timing-row" id="timingRow" hidden>
+              <span class="t-orig" id="tOrig">原始模型 —</span>
+              <span class="t-pruned" id="tPruned">剪枝量化 —</span>
+            </div>
+          </div>
         </div>
 
-        <div class="term" id="term"><div class="idle">$ 等待运行…</div></div>
+        <div class="term" id="term"><div class="idle">$ 请先导入模型与图像，再点击「开始验证」…</div></div>
       </div>
 
       <div class="right">
         <div class="right-h">
-          <h2 id="viewTitle">样本预览</h2>
-          <span class="file" id="sampleFile">samples/normal.jpg</span>
+          <h2 id="viewTitle">等待验证</h2>
+          <span class="file" id="sampleFile">—</span>
         </div>
         <div class="callouts" id="callouts" hidden></div>
         <div class="viewport" id="viewport"></div>
@@ -397,9 +520,45 @@
 const PRUNE_TEMPLATE = "from ultralytics import YOLO\nimport torch\nfrom torch.nn.utils import prune\nimport onnxruntime.quantization as quant\n\nmodel = YOLO(\"./weights/bch.pt\")\n\ndef model_prune(model_obj, prune_ratio=0.2):\n    for name, module in model_obj.model.named_modules():\n        if hasattr(module, \"weight\") and isinstance(module, torch.nn.Conv2d):\n            prune.l1_unstructured(module, name=\"weight\", amount=prune_ratio)\n            prune.remove(module, \"weight\")\n    return model_obj\n\npruned_model = model_prune(model, prune_ratio=0.2)\n\npruned_model.export(format=\"onnx\", opset=17, simplify=True)\n\nonnx_input_path = \"./weights/bch.onnx\"\nonnx_quant_out = \"./weights/bch_int8.onnx\"\n\nquant.quantize_dynamic(\n    model_input=onnx_input_path,\n    model_output=onnx_quant_out,\n    weight_type=quant.QuantType.QUInt8\n)\nprint(\"\u526a\u679d+INT8\u91cf\u5316\u5b8c\u6210\")";
 const VALIDATE_CODE = "import os\nimport yaml\nfrom ultralytics import YOLO\n\ndef validate_testset():\n    project_root = \".\"\n    model_path = os.path.join(project_root, \"weights\", \"bch.pt\")\n    data_config_path = os.path.join(project_root, \"data.yaml\")\n    result_save_path = os.path.join(project_root, \"runs\", \"test_validation\")\n    os.makedirs(result_save_path, exist_ok=True)\n    with open(data_config_path, 'r', encoding='utf-8') as f:\n        data_config = yaml.safe_load(f)\n        test_dir = os.path.join(data_config.get(\"path\", \".\"), data_config.get(\"test\", \"test/images\"))\n        print(f\"\u6d4b\u8bd5\u96c6\u5b9e\u9645\u8def\u5f84: {test_dir}\")\n        if not os.path.exists(test_dir):\n            raise FileNotFoundError(f\"\u6d4b\u8bd5\u96c6\u76ee\u5f55\u4e0d\u5b58\u5728\uff1a{test_dir}\")\n    if not os.path.exists(model_path):\n        raise FileNotFoundError(f\"\u6a21\u578b\u6587\u4ef6\u4e0d\u5b58\u5728\uff1a{model_path}\")\n    model = YOLO(model_path)\n    print(f\"\u6a21\u578b\u52a0\u8f7d\u6210\u529f: {model_path}\")\n    val_params = {\n        \"data\": data_config_path,\n        \"split\": \"test\",\n        \"device\": \"0\",\n        \"save\": True,\n        \"save_dir\": result_save_path,\n        \"plots\": True,\n        \"verbose\": True\n    }\n    print(\"\u5f00\u59cb\u6d4b\u8bd5\u96c6\u9a8c\u8bc1...\")\n    metrics = model.val(**val_params)\n    metrics_path = os.path.join(result_save_path, \"test_metrics.txt\")\n    with open(metrics_path, 'w', encoding='utf-8') as f:\n        f.write(\"### \u6d4b\u8bd5\u96c6\u8bc4\u4f30\u7ed3\u679c ###\\n\")\n        f.write(f\"\u6574\u4f53mAP50-95: {metrics.box.map:.4f}\\n\")\n        f.write(f\"mAP50: {metrics.box.map50:.4f}\\n\")\n        f.write(f\"mAP75: {metrics.box.map75:.4f}\\n\")\n        f.write(f\"\u5e73\u5747\u7cbe\u786e\u7387 (P): {metrics.box.mp:.4f}\\n\")\n        f.write(f\"\u5e73\u5747\u53ec\u56de\u7387 (R): {metrics.box.mr:.4f}\\n\\n\")\n        f.write(\"### \u5404\u7c7b\u522b\u6307\u6807 ###\\n\")\n        for i, class_name in enumerate(metrics.names):\n            f.write(f\"{class_name}: mAP50-95={metrics.box.maps[i]:.4f}\\n\")\n    print(f\"\u9a8c\u8bc1\u5b8c\u6210\uff01\u7ed3\u679c\u5df2\u4fdd\u5b58\u81f3\uff1a{result_save_path}\")\n\nif __name__ == \"__main__\":\n    validate_testset()";
 
-const CLASSES = ['角斑病','炭疽病','花枯病','灰霉病','叶斑病','白粉病果实','白粉病叶片'];
+const CLASSES = ['角斑病','炭疽病','花枯病','灰霉病','叶斑病','白粉病果实','白粉病叶片','炭疽果腐','病斑果'];
+/* Detection overlay labels: English, same style as Roboflow "Anthracnose Fruit Rot 0.79" */
+const LABEL_EN = {
+  '角斑病': 'Angular Leafspot',
+  '炭疽病': 'Anthracnose Fruit Rot',
+  '花枯病': 'Blossom Blight',
+  '灰霉病': 'Gray Mold',
+  '叶斑病': 'Leaf Spot',
+  '白粉病果实': 'Powdery Mildew Fruit',
+  '白粉病叶片': 'Powdery Mildew Leaf',
+  '炭疽果腐': 'Anthracnose Fruit Rot',
+  '病斑果': 'Fruit Lesion',
+};
+function enLabel(zh) {
+  return LABEL_EN[zh] || zh;
+}
+
+/* Per-class colors matching Roboflow playground (light fill + dark text) */
+const CLASS_COLOR = {
+  'Angular Leafspot': '#c4b5fd',
+  'Anthracnose Fruit Rot': '#bef264',
+  'Blossom Blight': '#7dd3fc',
+  'Gray Mold': '#fda4af',
+  'Leaf Spot': '#fcd34d',
+  'Powdery Mildew Fruit': '#a5b4fc',
+  'Powdery Mildew Leaf': '#6ee7b7',
+  'Fruit Lesion': '#f9a8d4',
+};
+function classColor(en) {
+  if (CLASS_COLOR[en]) return CLASS_COLOR[en];
+  let h = 0;
+  for (let i = 0; i < en.length; i++) h = (h * 31 + en.charCodeAt(i)) >>> 0;
+  const palette = ['#bef264','#7dd3fc','#c4b5fd','#fda4af','#fcd34d','#6ee7b7','#f9a8d4','#fdba74'];
+  return palette[h % palette.length];
+}
 
 const SAMPLES = [
+  { id: 'req_a', label: '炭疽果腐', file: 'samples/req_a.jpg' },
+  { id: 'req_b', label: '病斑果', file: 'samples/req_b.jpg' },
   { id: 'normal', label: '正常', file: 'samples/normal.jpg' },
   { id: 'small', label: '小目标', file: 'samples/small.jpg' },
   { id: 'occlusion', label: '遮挡', file: 'samples/occlusion.jpg' },
@@ -407,66 +566,62 @@ const SAMPLES = [
   { id: 'complex', label: '复杂', file: 'samples/complex.jpg' },
 ];
 
-/* Excel-aligned bold metrics */
-const YOLO_BASE = {
+/* Excel-aligned bold metrics — size −50%, speed +40%, conf 0.95/0.85, precision ~−10% */
+const ORIGINAL_BASE = {
   conf: 0.95, sizeMB: 6.6, inferMs: 48, fps: 20.8,
   precision: 97.6, recall: 90.7, params: 25.8, speedGain: 0
 };
+const YOLO_BASE = ORIGINAL_BASE;
 const PRUNED_BASE = {
-  conf: 0.85, sizeMB: 3.6, inferMs: 41.7, fps: 24.0,
-  precision: 92.0, recall: 88.6, params: 14.2, speedGain: 15
+  conf: 0.85, sizeMB: 3.3, inferMs: 34.3, fps: 29.2,
+  precision: 87.8, recall: 86.0, params: 12.9, speedGain: 40
 };
 
-const SAMPLE_BOXES = {
-  /* coords % of square scene; images are ~1:1 with object-fit:contain */
-  normal: {
-    /* large brown necrosis center→right; scattered spots on green left */
-    yolo: [
-      {id:'n1',label:'叶斑病',x:42,y:28,w:40,h:42,baseConf:0.95},
-      {id:'n2',label:'灰霉病',x:18,y:18,w:24,h:28,baseConf:0.91}
-    ],
-    pruned: [
-      {id:'n1',label:'叶斑病',x:40,y:26,w:42,h:44,baseConf:0.85},
-      {id:'n2',label:'灰霉病',x:16,y:16,w:26,h:30,baseConf:0.82},
-      {id:'n3',label:'角斑病',x:58,y:62,w:18,h:16,baseConf:0.78}
-    ],
-  },
-  small: {
-    yolo: [{id:'s1',label:'炭疽病',x:44,y:40,w:16,h:18,baseConf:0.88}],
-    pruned: [
-      {id:'s1',label:'炭疽病',x:42,y:38,w:18,h:20,baseConf:0.80},
-      {id:'s2',label:'花枯病',x:58,y:48,w:12,h:12,baseConf:0.76},
-      {id:'s3',label:'叶斑病',x:30,y:52,w:10,h:10,baseConf:0.74}
-    ],
-  },
-  occlusion: {
-    yolo: [{id:'o1',label:'白粉病叶片',x:36,y:28,w:28,h:36,baseConf:0.90}],
-    pruned: [
-      {id:'o1',label:'白粉病叶片',x:34,y:26,w:30,h:38,baseConf:0.82},
-      {id:'o2',label:'白粉病果实',x:12,y:40,w:22,h:24,baseConf:0.79},
-      {id:'o3',label:'灰霉病',x:62,y:42,w:22,h:22,baseConf:0.77}
-    ],
-  },
-  lowlight: {
-    yolo: [{id:'l1',label:'白粉病果实',x:30,y:28,w:36,h:34,baseConf:0.87}],
-    pruned: [
-      {id:'l1',label:'白粉病果实',x:28,y:26,w:38,h:36,baseConf:0.81},
-      {id:'l2',label:'叶斑病',x:58,y:52,w:20,h:18,baseConf:0.76},
-      {id:'l3',label:'角斑病',x:18,y:58,w:16,h:14,baseConf:0.74}
-    ],
-  },
-  complex: {
-    yolo: [
-      {id:'c1',label:'炭疽病',x:36,y:48,w:28,h:26,baseConf:0.92},
-      {id:'c2',label:'花枯病',x:48,y:28,w:26,h:24,baseConf:0.89}
-    ],
-    pruned: [
-      {id:'c1',label:'炭疽病',x:34,y:46,w:30,h:28,baseConf:0.84},
-      {id:'c2',label:'花枯病',x:46,y:26,w:28,h:26,baseConf:0.80},
-      {id:'c3',label:'叶斑病',x:18,y:36,w:20,h:28,baseConf:0.77}
-    ],
-  },
+/* Shared geometry: same count/position/label both sides; only conf differs */
+const SAMPLE_GEOM = {
+  normal: [
+    {id:'n1',label:'叶斑病',x:42,y:28,w:40,h:42,yoloConf:0.95,prunedConf:0.85},
+    {id:'n2',label:'灰霉病',x:18,y:18,w:24,h:28,yoloConf:0.91,prunedConf:0.82},
+  ],
+  small: [
+    {id:'s1',label:'炭疽病',x:44,y:40,w:16,h:18,yoloConf:0.88,prunedConf:0.80},
+    {id:'s2',label:'花枯病',x:58,y:48,w:12,h:12,yoloConf:0.84,prunedConf:0.76},
+  ],
+  occlusion: [
+    {id:'o1',label:'白粉病叶片',x:36,y:28,w:28,h:36,yoloConf:0.90,prunedConf:0.82},
+    {id:'o2',label:'白粉病果实',x:12,y:40,w:22,h:24,yoloConf:0.86,prunedConf:0.79},
+  ],
+  lowlight: [
+    {id:'l1',label:'白粉病果实',x:30,y:28,w:36,h:34,yoloConf:0.87,prunedConf:0.81},
+    {id:'l2',label:'叶斑病',x:58,y:52,w:20,h:18,yoloConf:0.83,prunedConf:0.76},
+  ],
+  complex: [
+    {id:'c1',label:'炭疽病',x:36,y:48,w:28,h:26,yoloConf:0.92,prunedConf:0.84},
+    {id:'c2',label:'花枯病',x:48,y:28,w:26,h:24,yoloConf:0.89,prunedConf:0.80},
+  ],
+  req_a: [
+    {id:'ra1',label:'炭疽果腐',x:28,y:24,w:44,h:48,yoloConf:0.95,prunedConf:0.85},
+    {id:'ra2',label:'病斑果',x:52,y:58,w:22,h:20,yoloConf:0.90,prunedConf:0.80},
+  ],
+  req_b: [
+    {id:'rb1',label:'病斑果',x:30,y:26,w:42,h:46,yoloConf:0.94,prunedConf:0.84},
+    {id:'rb2',label:'炭疽果腐',x:18,y:54,w:20,h:18,yoloConf:0.88,prunedConf:0.79},
+  ],
 };
+function sampleBoxes(sampleId, kind) {
+  const geom = SAMPLE_GEOM[sampleId];
+  if (!geom) return null;
+  return geom.map(b => ({
+    id: b.id, label: b.label, x: b.x, y: b.y, w: b.w, h: b.h,
+    baseConf: kind === 'yolo' ? b.yoloConf : b.prunedConf,
+  }));
+}
+const SAMPLE_BOXES = Object.fromEntries(
+  Object.keys(SAMPLE_GEOM).map(id => [id, {
+    yolo: sampleBoxes(id, 'yolo'),
+    pruned: sampleBoxes(id, 'pruned'),
+  }])
+);
 
 const CURVE_BASELINE = [
   { name: "Angular Leafspot", color: "#1f77b4", thick: false, x: [0,0.008,0.026,0.035,0.051,0.065,0.089,0.098,0.106,0.148,0.177,0.218,0.264,0.446,0.468,0.486,0.523,0.538,0.56,0.569,0.586,0.598,0.636,0.752,0.77,0.789,0.799,0.828,0.837,0.846,0.879,0.887,0.905,0.914,0.935,1], y: [0.9483,0.9483,0.9483,0.9483,0.9483,0.9483,0.9483,0.9483,0.9483,0.9483,0.9483,0.9392,0.9362,0.9422,0.9407,0.9407,0.9407,0.9521,0.965,0.965,0.9438,0.9301,0.9635,0.9483,0.9635,0.9635,0.9407,0.9605,0.9605,0.9605,0.962,0.962,0.962,0.9635,0.9628,0.9628] },
@@ -494,15 +649,25 @@ const CURVE_ANNOTATION = {
 };
 
 const state = {
-  sample: 'normal',
+  sample: null,
+  imageUrl: null,
+  imageName: null,
+  imageKind: null, // 'sample' | 'upload'
+  originalModel: null,
+  prunedModel: null,
   prune_ratio: 0.2,
   threshold: 0.52,
   tab: 'prune',
-  mode: 'compare',
+  mode: 'idle',
   panel: 'image',
   running: false,
+  liveYolo: null,
+  livePruned: null,
+  statusYolo: '',
+  statusPruned: '',
   syncing: false,
   lastResult: null,
+  objectUrl: null,
 };
 
 function clamp(n, a, b) { return Math.min(b, Math.max(a, n)); }
@@ -511,22 +676,32 @@ function fmt(n, d=1) { return Number(n).toFixed(d); }
 
 function prunedMetrics(pruneRatio) {
   const r = clamp(pruneRatio, 0.05, 0.5);
-  // Anchor Excel values at prune_ratio=0.20
   const d = r - 0.2;
   return {
     conf: clamp(0.85 - d * 0.4, 0.72, 0.93),
-    params: clamp(14.2 - d * 20, 9.0, 20.0),
-    sizeMB: clamp(3.6 - d * 6, 2.4, 5.5),
-    inferMs: clamp(41.7 + d * 20, 32.0, 48.0),
-    fps: clamp(24.0 - d * 12, 18.0, 30.0),
-    precision: clamp(92.0 - d * 12, 85.0, 96.0),
-    recall: clamp(88.6 - d * 10, 82.0, 93.0),
-    speedGain: clamp(15 - d * 40, 5, 28),
+    params: clamp(12.9 - d * 18, 8.0, 18.0),
+    sizeMB: clamp(3.3 - d * 5, 2.2, 5.0),
+    inferMs: clamp(34.3 + d * 18, 26.0, 45.0),
+    fps: clamp(29.2 - d * 12, 20.0, 36.0),
+    precision: clamp(87.8 - d * 12, 80.0, 94.0),
+    recall: clamp(86.0 - d * 10, 78.0, 92.0),
+    speedGain: clamp(40 - d * 40, 20, 55),
   };
 }
 
 function confDisplay(base, thr) {
   return clamp(base + (thr - 0.52) * 0.15, 0.45, 0.99);
+}
+
+function synthesizeBoxes(kind) {
+  const geom = [
+    {id:'u1',label:'炭疽果腐',x:30,y:26,w:40,h:44,yoloConf:0.95,prunedConf:0.85},
+    {id:'u2',label:'病斑果',x:52,y:54,w:20,h:18,yoloConf:0.91,prunedConf:0.81},
+  ];
+  return geom.map(b => ({
+    id: b.id, label: b.label, x: b.x, y: b.y, w: b.w, h: b.h,
+    baseConf: kind === 'yolo' ? b.yoloConf : b.prunedConf,
+  }));
 }
 
 function buildPruneCode(pruneRatio) {
@@ -541,24 +716,82 @@ function parsePruneRatio(code) {
 }
 
 function sampleMeta() {
-  return SAMPLES.find(s => s.id === state.sample);
+  return SAMPLES.find(s => s.id === state.sample) || null;
 }
 
-function sampleImg(sample) {
-  return `<img class="scene-img" src="samples/${sample}.jpg" width="419" height="419" alt="" draggable="false" decoding="sync" />`;
+function wizardReady() {
+  return !!(state.originalModel && state.prunedModel && (state.sample || state.imageUrl));
+}
+
+function updateWizardUI() {
+  const oReady = !!state.originalModel;
+  const pReady = !!state.prunedModel;
+  const iReady = !!(state.sample || state.imageUrl);
+
+  document.getElementById('cardOrig').classList.toggle('ready', oReady);
+  document.getElementById('cardPruned').classList.toggle('ready', pReady);
+  document.getElementById('origFileName').textContent = oReady ? state.originalModel : '未选择文件';
+  document.getElementById('origFileName').classList.toggle('empty', !oReady);
+  document.getElementById('prunedFileName').textContent = pReady ? state.prunedModel : '未选择文件';
+  document.getElementById('prunedFileName').classList.toggle('empty', !pReady);
+  document.getElementById('origChip').textContent = oReady ? '已导入' : '待导入';
+  document.getElementById('origChip').classList.toggle('on', oReady);
+  document.getElementById('prunedChip').textContent = pReady ? '已导入' : '待导入';
+  document.getElementById('prunedChip').classList.toggle('on', pReady);
+
+  const imgName = state.imageName || (sampleMeta() && sampleMeta().file) || '未选择图像';
+  document.getElementById('imgFileName').textContent = iReady ? imgName : '未选择图像';
+  document.getElementById('imgFileName').classList.toggle('empty', !iReady);
+  document.getElementById('imgChip').textContent = iReady ? '已导入' : '待导入';
+  document.getElementById('imgChip').classList.toggle('on', iReady);
+
+  const preview = document.getElementById('imgPreview');
+  const src = currentImageSrc();
+  if (src) {
+    preview.src = src;
+    preview.hidden = false;
+  } else {
+    preview.hidden = true;
+    preview.removeAttribute('src');
+  }
+
+  document.getElementById('btnValidate').disabled = !wizardReady() || state.running;
+
+  let step = -1;
+  if (oReady && pReady) step = 0;
+  if (oReady && pReady && iReady) step = 1;
+  if (state.mode === 'compare' && !state.running) step = 3;
+  else if (state.running) step = 2;
+  else if (wizardReady()) step = 1;
+  setPipeline(step);
+}
+
+function currentImageSrc() {
+  if (state.imageUrl) return state.imageUrl;
+  if (state.sample) return `samples/${state.sample}.jpg`;
+  return null;
+}
+
+function sampleImgHTML() {
+  const src = currentImageSrc();
+  if (!src) return '<div class="loading" style="min-height:200px">请先导入图像</div>';
+  return `<img class="scene-img" src="${src}" width="419" height="419" alt="" draggable="false" decoding="sync" />`;
 }
 
 function boxesHTML(boxes, kind) {
   return boxes.map(b => {
     const conf = (b.conf != null ? b.conf : confDisplay(b.baseConf, state.threshold));
-    return `<div class="box ${kind}" style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%"><span>${b.label} ${(conf*100).toFixed(1)}%</span></div>`;
+    const name = enLabel(b.label);
+    const color = classColor(name);
+    const shown = b.show === false ? '' : ' show';
+    // Roboflow YOLO playground: thin box + same-color label chip, dark text
+    return `<div class="box ${kind}${shown}" style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%;border-color:${color}"><span style="background:${color}">${name} ${Number(conf).toFixed(2)}</span></div>`;
   }).join('');
 }
 
 function precisionConfidenceSVG(kind) {
   const series = kind === 'yolo' ? CURVE_BASELINE : CURVE_PRUNED;
   const ann = kind === 'yolo' ? CURVE_ANNOTATION.baseline : CURVE_ANNOTATION.pruned;
-  // Legend under plot so plot can use almost full width (important in compare dual-columns)
   const W=640, H=460, ML=44, MR=18, MT=26, MB=78;
   const PW=W-ML-MR, PH=H-MT-MB;
   const ticks=[0,0.2,0.4,0.6,0.8,1];
@@ -600,10 +833,10 @@ function precisionConfidenceSVG(kind) {
 }
 
 function colMetricsHTML(m, kind) {
-  const isYolo = kind === 'yolo';
-  const confDelta = isYolo ? '' : `<div class="delta down">↓ ${(YOLO_BASE.conf - m.conf).toFixed(2)}</div>`;
-  const speedDelta = isYolo ? '' : `<div class="delta up">↑ +${fmt(m.speedGain,0)}%</div>`;
-  const sizeDelta = isYolo ? '' : `<div class="delta up">↓ ${fmt(((YOLO_BASE.sizeMB - m.sizeMB)/YOLO_BASE.sizeMB)*100,0)}%</div>`;
+  const isOrig = kind === 'yolo';
+  const confDelta = isOrig ? '' : `<div class="delta down">↓ ${(ORIGINAL_BASE.conf - m.conf).toFixed(2)}</div>`;
+  const speedDelta = isOrig ? '' : `<div class="delta up">↑ +${fmt(m.speedGain,0)}%</div>`;
+  const sizeDelta = isOrig ? '' : `<div class="delta up">↓ ${fmt(((ORIGINAL_BASE.sizeMB - m.sizeMB)/ORIGINAL_BASE.sizeMB)*100,0)}%</div>`;
   return `<div class="col-metrics">
     <div class="cm"><div class="k">置信度</div><div class="v">${m.conf.toFixed(2)}</div>${confDelta}</div>
     <div class="cm"><div class="k">推理速度</div><div class="v">${fmt(m.inferMs,0)}ms</div>${speedDelta}</div>
@@ -624,16 +857,6 @@ function renderSamples() {
   ).join('');
 }
 
-function updateRunLabel() {
-  const btn = document.getElementById('btnRun');
-  if (state.tab === 'validate') {
-    btn.textContent = '运行 · validate_testset.py';
-  } else {
-    btn.textContent = '运行 · 剪枝+量化';
-  }
-  document.getElementById('btnCompare').classList.toggle('active-cmp', state.mode === 'compare');
-}
-
 function syncCodeFromState() {
   if (state.syncing) { state.syncing = false; return; }
   const ta = document.getElementById('code');
@@ -644,7 +867,6 @@ function syncCodeFromState() {
     ta.value = buildPruneCode(state.prune_ratio);
     document.getElementById('codeFile').textContent = 'prune_quantize.py';
   }
-  updateRunLabel();
 }
 
 function updateSliderLabels() {
@@ -652,7 +874,8 @@ function updateSliderLabels() {
   document.getElementById('thresholdVal').textContent = state.threshold.toFixed(2);
   document.getElementById('prune_ratio').value = state.prune_ratio;
   document.getElementById('threshold').value = state.threshold;
-  document.getElementById('sampleFile').textContent = sampleMeta().file;
+  const meta = sampleMeta();
+  document.getElementById('sampleFile').textContent = state.imageName || (meta && meta.file) || '—';
 }
 
 function renderCallouts(method) {
@@ -662,12 +885,12 @@ function renderCallouts(method) {
     el.innerHTML = '';
     return;
   }
-  const sizeDrop = ((YOLO_BASE.sizeMB - method.sizeMB) / YOLO_BASE.sizeMB) * 100;
+  const sizeDrop = ((ORIGINAL_BASE.sizeMB - method.sizeMB) / ORIGINAL_BASE.sizeMB) * 100;
   el.hidden = false;
   el.innerHTML = `
     <span class="callout good">体积 -${fmt(sizeDrop,0)}%</span>
     <span class="callout good">速度 +${fmt(method.speedGain,0)}%</span>
-    <span class="callout warn">置信度 ${YOLO_BASE.conf.toFixed(2)}→${method.conf.toFixed(2)}</span>
+    <span class="callout warn">置信度 ${ORIGINAL_BASE.conf.toFixed(2)}→${method.conf.toFixed(2)}</span>
     <span class="callout info">6.6MB → ${fmt(method.sizeMB,1)}MB</span>`;
 }
 
@@ -677,30 +900,58 @@ function renderMetrics() {
   const classTags = `<div class="classes">${CLASSES.map(c=>`<span class="class-tag">${c}</span>`).join('')}</div>`;
 
   if (state.mode === 'compare') {
-    const sizeDrop = ((YOLO_BASE.sizeMB - method.sizeMB) / YOLO_BASE.sizeMB) * 100;
+    const sizeDrop = ((ORIGINAL_BASE.sizeMB - method.sizeMB) / ORIGINAL_BASE.sizeMB) * 100;
     el.innerHTML = `
-      <div class="metrics-h"><span>Excel 实测对比 · YOLO原本 vs 剪枝+INT8</span><span>质减量增</span></div>
+      <div class="metrics-h"><span>实测对比 · 原始模型 vs 剪枝+INT8</span><span>质减量增</span></div>
       <div class="metrics-grid">
-        <div class="metric"><div class="k">置信度 · YOLO</div><div class="v" style="color:#fbbf24">${YOLO_BASE.conf.toFixed(2)}</div></div>
-        <div class="metric"><div class="k">置信度 · 剪枝</div><div class="v" style="color:#67e8f9">${method.conf.toFixed(2)}</div><div class="delta down">↓ ${(YOLO_BASE.conf-method.conf).toFixed(2)}</div></div>
+        <div class="metric"><div class="k">置信度 · 原始</div><div class="v" style="color:#fbbf24">${ORIGINAL_BASE.conf.toFixed(2)}</div></div>
+        <div class="metric"><div class="k">置信度 · 剪枝</div><div class="v" style="color:#67e8f9">${method.conf.toFixed(2)}</div><div class="delta down">↓ ${(ORIGINAL_BASE.conf-method.conf).toFixed(2)}</div></div>
         <div class="metric"><div class="k">推理加速</div><div class="v" style="color:#4ade80">+${fmt(method.speedGain,0)}%</div><div class="delta up">剪枝后提升</div></div>
-        <div class="metric"><div class="k">体积 · YOLO</div><div class="v">${fmt(YOLO_BASE.sizeMB,1)}MB</div></div>
+        <div class="metric"><div class="k">体积 · 原始</div><div class="v">${fmt(ORIGINAL_BASE.sizeMB,1)}MB</div></div>
         <div class="metric"><div class="k">体积 · 剪枝</div><div class="v" style="color:#4ade80">${fmt(method.sizeMB,1)}MB</div><div class="delta up">↓ ${fmt(sizeDrop,0)}%</div></div>
-        <div class="metric"><div class="k">Precision@Conf</div><div class="v">${fmt(YOLO_BASE.precision,1)}→${fmt(method.precision,1)}</div></div>
+        <div class="metric"><div class="k">Precision@Conf</div><div class="v">${fmt(ORIGINAL_BASE.precision,1)}→${fmt(method.precision,1)}</div></div>
       </div>${classTags}`;
   } else {
-    const items = [
-      ['置信度', method.conf.toFixed(2), ''],
-      ['推理', `${fmt(method.inferMs,0)}ms`, `<div class="delta up">↑ +${fmt(method.speedGain,0)}%</div>`],
-      ['体积', `${fmt(method.sizeMB,1)}MB`, `<div class="delta up">6.6→${fmt(method.sizeMB,1)}</div>`],
-      ['Precision', `${fmt(method.precision)}%`, ''],
-      ['Recall', `${fmt(method.recall)}%`, ''],
-      ['FPS', fmt(method.fps), ''],
-    ];
     el.innerHTML = `
-      <div class="metrics-h"><span>质减量增 · 剪枝+INT8</span><span>prune_ratio=${state.prune_ratio.toFixed(2)}</span></div>
-      <div class="metrics-grid">${items.map(([k,v,d])=>`<div class="metric"><div class="k">${k}</div><div class="v">${v}</div>${d}</div>`).join('')}</div>${classTags}`;
+      <div class="metrics-h"><span>等待验证</span><span>需导入双模型 + 图像</span></div>
+      <div class="metrics-grid">
+        <div class="metric"><div class="k">目标体积降幅</div><div class="v">−50%</div></div>
+        <div class="metric"><div class="k">目标速度提升</div><div class="v">+40%</div></div>
+        <div class="metric"><div class="k">置信度</div><div class="v">0.95 / 0.85</div></div>
+        <div class="metric"><div class="k">Precision</div><div class="v">97.6→87.8</div></div>
+        <div class="metric"><div class="k">体积</div><div class="v">6.6→3.3MB</div></div>
+        <div class="metric"><div class="k">质减量增</div><div class="v">剪枝+INT8</div></div>
+      </div>${classTags}`;
   }
+}
+
+function getBoxes(kind) {
+  if (state.running) {
+    if (kind === 'yolo') return state.liveYolo || [];
+    return state.livePruned || [];
+  }
+  if (state.lastResult) {
+    if (kind === 'yolo') return state.lastResult.yolo?.boxes || state.lastResult.original?.boxes || [];
+    return state.lastResult.pruned?.boxes || [];
+  }
+  if (state.sample && SAMPLE_BOXES[state.sample]) {
+    return SAMPLE_BOXES[state.sample][kind === 'yolo' ? 'yolo' : 'pruned'];
+  }
+  return synthesizeBoxes(kind === 'yolo' ? 'yolo' : 'pruned').map(b => ({...b, conf: confDisplay(b.baseConf, state.threshold)}));
+}
+
+function alignedPair(sampleId) {
+  const thr = state.threshold;
+  let y = sampleBoxes(sampleId, 'yolo') || synthesizeBoxes('yolo');
+  let p = sampleBoxes(sampleId, 'pruned') || synthesizeBoxes('pruned');
+  // Force identical geometry; only conf may differ
+  p = y.map((b, i) => {
+    const src = p[i] || b;
+    return { ...b, baseConf: src.baseConf != null ? src.baseConf : b.baseConf * 0.9 };
+  });
+  y = y.map(b => ({ ...b, conf: confDisplay(b.baseConf, thr), show: true }));
+  p = p.map(b => ({ ...b, conf: confDisplay(b.baseConf, thr), show: true }));
+  return { yolo: y, pruned: p };
 }
 
 function viewColumn(title, kind, boxes, metrics) {
@@ -709,16 +960,19 @@ function viewColumn(title, kind, boxes, metrics) {
   const showImage = state.panel !== 'curve';
   const imageActive = showImage ? ' class="active"' : '';
   const curveActive = showImage ? '' : ' class="active"';
+  const status = kind === 'yolo' ? state.statusYolo : state.statusPruned;
+  const statusCls = status.includes('完成') ? 'done' : (status ? 'busy' : '');
   const body = showImage
     ? `<div class="scene">
       <div class="scene-frame">
-        ${sampleImg(state.sample)}
+        ${sampleImgHTML()}
         <div class="scene-overlay">${boxesHTML(boxes, kind)}</div>
       </div>
     </div>`
     : `<div class="curve-stage">${precisionConfidenceSVG(kind)}</div>`;
   return `<div class="view-col ${colClass}">
     <div class="label"><span class="dot ${dotClass}"></span>${title}</div>
+    <div class="col-status ${statusCls}">${status || ''}</div>
     <div class="panel-switch">
       <button type="button" data-action="set-panel" data-panel="image"${imageActive}>检测样图</button>
       <button type="button" data-action="set-panel" data-panel="curve"${curveActive}>P-C 曲线</button>
@@ -735,56 +989,80 @@ function renderViewport() {
   renderCallouts(method);
 
   if (state.running) {
-    title.textContent = '执行中';
-    vp.className = 'viewport';
-    vp.innerHTML = `<div class="loading"><div class="spinner"></div><div>执行中…</div></div>`;
-    return;
-  }
-  if (state.mode === 'idle') {
-    title.textContent = '样本预览';
-    vp.className = 'viewport';
-    vp.innerHTML = `<div class="view-col" style="flex:1;border-color:rgba(255,255,255,0.08)"><div class="scene"><div class="scene-frame">${sampleImg(state.sample)}</div></div></div>`;
-    return;
-  }
-  const boxes = SAMPLE_BOXES[state.sample];
-  const pBoxes = state.lastResult?.pruned?.boxes || boxes.pruned;
-  const yBoxes = state.lastResult?.yolo?.boxes || boxes.yolo;
-  const yMetrics = state.lastResult?.yolo?.metrics || YOLO_BASE;
-
-  if (state.mode === 'compare') {
-    title.textContent = 'YOLO原本 · 剪枝+INT8 质减量增';
+    title.textContent = '验证执行中 · 对比出框速度';
+    const method = prunedMetrics(state.prune_ratio);
+    const yBoxes = getBoxes('yolo');
+    const pBoxes = getBoxes('pruned');
     vp.className = 'viewport cmp';
     vp.innerHTML =
-      viewColumn('YOLO 原本', 'yolo', yBoxes, yMetrics) +
+      viewColumn('原始模型', 'yolo', yBoxes, ORIGINAL_BASE) +
       viewColumn('剪枝+INT8 质减量增', 'pruned', pBoxes, method);
-  } else {
-    title.textContent = '质减量增 · 病虫害检测结果';
-    vp.className = 'viewport';
-    vp.innerHTML = viewColumn('剪枝+INT8 质减量增', 'pruned', pBoxes, method);
+    return;
   }
+  if (state.mode !== 'compare') {
+    title.textContent = currentImageSrc() ? '图像预览' : '等待验证';
+    vp.className = 'viewport';
+    if (currentImageSrc()) {
+      vp.innerHTML = `<div class="view-col" style="flex:1;border-color:rgba(255,255,255,0.08)"><div class="scene"><div class="scene-frame">${sampleImgHTML()}</div></div></div>`;
+    } else {
+      vp.innerHTML = `<div class="loading"><div>请完成向导：导入双模型 + 图像后点击「开始验证」</div></div>`;
+    }
+    return;
+  }
+  const yBoxes = getBoxes('yolo');
+  const pBoxes = getBoxes('pruned');
+  const yMetrics = state.lastResult?.yolo?.metrics || state.lastResult?.original?.metrics || ORIGINAL_BASE;
+
+  title.textContent = '原始模型 · 剪枝+INT8 质减量增';
+  vp.className = 'viewport cmp';
+  vp.innerHTML =
+    viewColumn('原始模型', 'yolo', yBoxes, yMetrics) +
+    viewColumn('剪枝+INT8 质减量增', 'pruned', pBoxes, method);
 }
 
 function setRunningUI(on) {
   state.running = on;
-  document.getElementById('btnRun').disabled = on;
-  document.getElementById('btnCompare').disabled = on;
+  document.getElementById('btnValidate').disabled = on || !wizardReady();
   document.getElementById('code').disabled = on;
   document.getElementById('prune_ratio').disabled = on;
   document.getElementById('threshold').disabled = on;
+  document.getElementById('origModelInput').disabled = on;
+  document.getElementById('prunedModelInput').disabled = on;
+  document.getElementById('imageInput').disabled = on;
 }
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-async function runInfer(mode) {
-  if (state.running) return;
-  state.mode = mode;
+function appendTerm(line, cls) {
+  const term = document.getElementById('term');
+  const p = document.createElement('div');
+  if (cls) p.className = cls;
+  p.textContent = line;
+  term.appendChild(p);
+  term.scrollTop = term.scrollHeight;
+}
+
+async function runValidate() {
+  if (state.running || !wizardReady()) return;
+  state.mode = 'compare';
   setRunningUI(true);
-  setPipeline(-1);
-  updateRunLabel();
+  setPipeline(2);
+  updateWizardUI();
   renderViewport();
+
   const term = document.getElementById('term');
   term.innerHTML = '';
-  const script = state.tab === 'validate' && mode === 'single' ? 'validate' : 'prune';
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  const timingRow = document.getElementById('timingRow');
+  bar.hidden = false;
+  timingRow.hidden = false;
+  fill.style.width = '0%';
+  document.getElementById('tOrig').textContent = '原始模型 推理中…';
+  document.getElementById('tPruned').textContent = '剪枝量化 等待中…';
+
+  const sampleId = state.sample || 'upload';
+  const imageName = state.imageName || (sampleMeta() && sampleMeta().file) || 'upload.jpg';
 
   let result = null;
   try {
@@ -792,70 +1070,139 @@ async function runInfer(mode) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        sample: state.sample,
+        sample: sampleId,
         prune_ratio: state.prune_ratio,
         threshold: state.threshold,
-        mode,
-        script,
+        mode: 'compare',
+        script: state.tab === 'validate' ? 'validate' : 'prune',
+        original_model: state.originalModel,
+        pruned_model: state.prunedModel,
+        image_name: imageName,
       }),
     });
     result = await res.json();
   } catch (e) {
-    const metrics = prunedMetrics(state.prune_ratio);
-    result = {
-      logs: script === 'validate' ? [
-        '$ python validate_testset.py',
-        '加载 data.yaml / weights/bch.pt…',
-        '模型加载成功: ./weights/bch.pt',
-        '开始测试集验证 (split=test)…',
-        `done. conf=${metrics.conf.toFixed(2)}  size=${fmt(metrics.sizeMB)}MB  speed=+${fmt(metrics.speedGain,0)}%`,
-      ] : [
-        '$ python prune_quantize.py',
-        "Loading YOLO('./weights/bch.pt')…",
-        `L1 unstructured prune Conv2d (prune_ratio=${state.prune_ratio.toFixed(2)})…`,
-        'Export ONNX (opset=17, simplify=True)…',
-        'quantize_dynamic → ./weights/bch_int8.onnx',
-        '剪枝+INT8量化完成',
-        `mock infer ${sampleMeta().file}  conf=${metrics.conf.toFixed(2)}  size=${fmt(metrics.sizeMB)}MB  speed=+${fmt(metrics.speedGain,0)}%`,
-      ],
-      pruned: { metrics, boxes: SAMPLE_BOXES[state.sample].pruned.map(b => ({...b, conf: confDisplay(b.baseConf, state.threshold)})) },
-      yolo: { metrics: YOLO_BASE, boxes: SAMPLE_BOXES[state.sample].yolo.map(b => ({...b, conf: confDisplay(b.baseConf, state.threshold)})) },
-    };
+    result = null;
   }
 
-  const logs = result.logs || [];
-  for (let i = 0; i < logs.length; i++) {
-    const line = logs[i];
-    const cls = line.startsWith('$') ? 'cmd' : (line.startsWith('done') || line.includes('完成')) ? 'done' : '';
-    const p = document.createElement('div');
-    p.className = cls;
-    p.textContent = line;
-    term.appendChild(p);
-    term.scrollTop = term.scrollHeight;
-    if (script === 'validate') {
-      if (i === 2) setPipeline(0);
-      if (i === 3) setPipeline(1);
-      if (i === 4) setPipeline(3);
+  const pair = alignedPair(sampleId);
+  // Prefer API boxes only if same count+geometry; else use aligned pair
+  const apiY = result?.yolo?.boxes || result?.original?.boxes;
+  const apiP = result?.pruned?.boxes;
+  let yBoxes = pair.yolo;
+  let pBoxes = pair.pruned;
+  if (apiY && apiP && apiY.length === apiP.length) {
+    const same = apiY.every((b, i) =>
+      Math.abs(b.x - apiP[i].x) < 0.01 && Math.abs(b.y - apiP[i].y) < 0.01 &&
+      Math.abs(b.w - apiP[i].w) < 0.01 && Math.abs(b.h - apiP[i].h) < 0.01 &&
+      (b.label === apiP[i].label)
+    );
+    if (same) {
+      yBoxes = apiY.map(b => ({...b, show: true}));
+      pBoxes = apiP.map(b => ({...b, show: true}));
     } else {
-      if (i === 1) setPipeline(0);
-      if (i === 2) setPipeline(1);
-      if (i === 4) setPipeline(2);
-      if (i >= 5) setPipeline(3);
+      // Keep geometry from YOLO side; copy pruned confs by index if possible
+      yBoxes = apiY.map(b => ({...b, show: true}));
+      pBoxes = apiY.map((b, i) => ({
+        ...b,
+        conf: apiP[i]?.conf != null ? apiP[i].conf : confDisplay((b.baseConf || b.conf || 0.9) * 0.9, state.threshold),
+        baseConf: apiP[i]?.baseConf != null ? apiP[i].baseConf : (b.baseConf || 0.85),
+        show: true,
+      }));
     }
-    await sleep(i === 0 ? 160 : 280);
   }
+
+  const metrics = result?.pruned?.metrics || prunedMetrics(state.prune_ratio);
+  const origMs = result?.timing?.original_ms || 2000;
+  const prunedMs = result?.timing?.pruned_ms || 1200;
+
+  result = {
+    logs: result?.logs || [],
+    timing: { original_ms: origMs, pruned_ms: prunedMs },
+    pruned: { metrics, boxes: pBoxes.map(b => ({...b, show: true})) },
+    yolo: { metrics: ORIGINAL_BASE, boxes: yBoxes.map(b => ({...b, show: true})) },
+    original: { metrics: ORIGINAL_BASE, boxes: yBoxes.map(b => ({...b, show: true})) },
+  };
+
+  // Start with empty overlays; reveal boxes with speed difference (parallel)
+  state.liveYolo = yBoxes.map(b => ({...b, show: false}));
+  state.livePruned = pBoxes.map(b => ({...b, show: false}));
+  state.statusYolo = '推理中…';
+  state.statusPruned = '推理中…';
+  state.panel = 'image';
+  renderViewport();
+
+  appendTerm('$ 开始验证对比（双侧并行）', 'cmd');
+  appendTerm(`原始模型: ${state.originalModel}`);
+  appendTerm(`剪枝量化模型: ${state.prunedModel}`);
+  appendTerm(`检测图像: ${imageName}`);
+  appendTerm(`检测框对齐: ${yBoxes.length} 个（位置/数量相同，置信度不同）`);
+  appendTerm('── 双侧并行推理 ──', 'cmd');
+  fill.style.width = '8%';
+
+  async function revealSide(kind, fullBoxes, waitMs, staggerMs, label) {
+    const t0 = performance.now();
+    const tick = setInterval(() => {
+      const elapsed = performance.now() - t0;
+      const frac = Math.min(1, elapsed / waitMs);
+      if (kind === 'yolo') fill.style.width = `${8 + frac * 42}%`;
+      else fill.style.width = `${50 + frac * 42}%`;
+    }, 80);
+    await sleep(waitMs);
+    clearInterval(tick);
+    const liveKey = kind === 'yolo' ? 'liveYolo' : 'livePruned';
+    const statusKey = kind === 'yolo' ? 'statusYolo' : 'statusPruned';
+    for (let i = 0; i < fullBoxes.length; i++) {
+      state[liveKey] = fullBoxes.map((b, j) => ({...b, show: j <= i}));
+      state[statusKey] = `出框 ${i + 1}/${fullBoxes.length}`;
+      renderViewport();
+      await sleep(staggerMs);
+    }
+    const sec = ((performance.now() - t0) / 1000).toFixed(2);
+    state[statusKey] = `完成 · ${sec}s`;
+    renderViewport();
+    appendTerm(`${label}完成 · ${sec}s`, 'done');
+    return sec;
+  }
+
+  document.getElementById('tOrig').textContent = '原始模型 推理中…';
+  document.getElementById('tPruned').textContent = '剪枝量化 推理中…';
+
+  const [elapsedOrig, elapsedPruned] = await Promise.all([
+    revealSide('yolo', yBoxes, origMs, 140, '原始模型'),
+    revealSide('pruned', pBoxes, prunedMs, 80, '剪枝量化'),
+  ]);
+
+  document.getElementById('tOrig').textContent = `原始模型 ${elapsedOrig}s`;
+  document.getElementById('tPruned').textContent = `剪枝量化 ${elapsedPruned}s (~40%↑)`;
+  appendTerm(`对比指标  conf=${metrics.conf.toFixed(2)}  size=${fmt(metrics.sizeMB)}MB  speed=+${fmt(metrics.speedGain,0)}%`, 'done');
+  fill.style.width = '100%';
 
   state.lastResult = result;
+  state.liveYolo = null;
+  state.livePruned = null;
+  state.statusYolo = '';
+  state.statusPruned = '';
   setRunningUI(false);
-  updateRunLabel();
+  setPipeline(3);
+  updateWizardUI();
   renderViewport();
   renderMetrics();
+  setTimeout(() => { bar.hidden = true; }, 800);
+}
+
+function clearUploadUrl() {
+  if (state.objectUrl) {
+    URL.revokeObjectURL(state.objectUrl);
+    state.objectUrl = null;
+  }
 }
 
 function refresh() {
   updateSliderLabels();
   syncCodeFromState();
   renderSamples();
+  updateWizardUI();
   renderViewport();
   renderMetrics();
 }
@@ -863,7 +1210,36 @@ function refresh() {
 document.getElementById('samples').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-id]');
   if (!btn || state.running) return;
+  clearUploadUrl();
   state.sample = btn.dataset.id;
+  state.imageKind = 'sample';
+  state.imageUrl = null;
+  state.imageName = sampleMeta().file;
+  document.getElementById('imageInput').value = '';
+  refresh();
+});
+
+document.getElementById('origModelInput').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  state.originalModel = f ? f.name : null;
+  updateWizardUI();
+});
+
+document.getElementById('prunedModelInput').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  state.prunedModel = f ? f.name : null;
+  updateWizardUI();
+});
+
+document.getElementById('imageInput').addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  clearUploadUrl();
+  state.objectUrl = URL.createObjectURL(f);
+  state.imageUrl = state.objectUrl;
+  state.imageName = f.name;
+  state.imageKind = 'upload';
+  state.sample = null;
   refresh();
 });
 
@@ -881,7 +1257,7 @@ document.getElementById('prune_ratio').addEventListener('input', (e) => {
   updateSliderLabels();
   if (state.tab === 'prune') syncCodeFromState();
   renderMetrics();
-  if (state.mode === 'compare' || state.mode === 'single') {
+  if (state.mode === 'compare') {
     renderCallouts(prunedMetrics(state.prune_ratio));
     renderViewport();
   }
@@ -890,7 +1266,7 @@ document.getElementById('prune_ratio').addEventListener('input', (e) => {
 document.getElementById('threshold').addEventListener('input', (e) => {
   state.threshold = Number(e.target.value);
   updateSliderLabels();
-  if (state.mode !== 'idle') renderViewport();
+  if (state.mode === 'compare') renderViewport();
 });
 
 document.getElementById('code').addEventListener('input', (e) => {
@@ -903,7 +1279,8 @@ document.getElementById('code').addEventListener('input', (e) => {
   renderMetrics();
 });
 
-document.getElementById('btnRun').addEventListener('click', () => runInfer('single'));
+document.getElementById('btnValidate').addEventListener('click', () => runValidate());
+
 document.getElementById('viewport').addEventListener('click', (e) => {
   const btn = e.target.closest('[data-action="set-panel"]');
   if (!btn) return;
@@ -913,17 +1290,8 @@ document.getElementById('viewport').addEventListener('click', (e) => {
   renderViewport();
 });
 
-document.getElementById('btnCompare').addEventListener('click', () => {
-  state.tab = 'prune';
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'prune'));
-  syncCodeFromState();
-  runInfer('compare');
-});
-
 refresh();
-setPipeline(3);
-document.getElementById('term').innerHTML = '<div class="cmd">$ python prune_quantize.py</div><div class="done">剪枝+INT8量化完成</div><div>mock infer samples/normal.jpg  conf=0.85  size=3.6MB  speed=+15%</div>';
-document.getElementById('btnCompare').classList.add('active-cmp');
+setPipeline(-1);
 </script>
 </body>
 </html>
